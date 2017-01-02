@@ -6,6 +6,7 @@ __author__ = "Wesley Soo-Hoo"
 __license__ = "MIT"
 
 api_link = "https://www.thebluealliance.com/api/v2"
+headers = {'X-TBA-App-Id':'frc687:fantasy:v01'}
 
 
 class Team:
@@ -18,9 +19,9 @@ class Team:
     @staticmethod
     def get_team(number):
         if str(number)[0] != 'f':
-            req = requests.get("{}/team/frc{}".format(api_link, number)).json()
+            req = requests.get("{}/team/frc{}".format(api_link, number), headers=headers).json()
         else:
-            req = requests.get("{}/team/{}".format(api_link, number)).json()
+            req = requests.get("{}/team/{}".format(api_link, number), headers=headers).json()
         team = Team(req['key'], req['nickname'], req['team_number'], req['location'])
         return team
 
@@ -30,7 +31,7 @@ class Team:
         i = 0
         req = ["HI"]
         while req:
-            req = requests.get("{}/teams/{}".format(api_link, i)).json()
+            req = requests.get("{}/teams/{}".format(api_link, i), headers=headers).json()
             for j in req:
                 teams.append(j['team_number'])
             i += 1
@@ -46,14 +47,21 @@ class Team:
         return self.location
 
     def get_events(self, year):
-        req = requests.get("{}/team/{}/{}/events".format(api_link, self.key, year)).json()
+        req = requests.get("{}/team/{}/{}/events".format(api_link, self.key, year), headers=headers).json()
         events = []
         for i in req:
             events.append(Event.get_event(i['key']))
         return events
 
+    def get_event_week(self, week, year):
+        req = requests.get("{}/team/{}/{}/events".format(api_link, self.key, year), headers=headers).json()
+        events = []
+        for i in req:
+            if i['week'] == week:
+                return Event.get_event(i['key'])
+
     def get_awards(self, event_key):
-        req = requests.get("{}/team/{}/event/{}/awards".format(api_link, self.key, event_key)).json()
+        req = requests.get("{}/team/{}/event/{}/awards".format(api_link, self.key, event_key), headers=headers).json()
         awards = []
         for i in req:
             recipients = []
@@ -63,7 +71,7 @@ class Team:
         return awards
 
     def get_matches(self, event_key):
-        req = requests.get("{}/team/{}/event/{}/matches".format(api_link, self.key, event_key)).json()
+        req = requests.get("{}/team/{}/event/{}/matches".format(api_link, self.key, event_key), headers=headers).json()
         matches = []
         for i in req:
             matches.append(Match.get_match(i['key']))
@@ -73,7 +81,7 @@ class Team:
         return "Not Supported Yet"
 
     def get_all_events(self):
-        req = requests.get("{}/team/{}/history/events".format(api_link, self.key)).json()
+        req = requests.get("{}/team/{}/history/events".format(api_link, self.key), headers=headers).json()
         events = []
         for i in req:
             events.append(Event.get_event(i['key']))
@@ -96,20 +104,20 @@ class Event:
 
     @staticmethod
     def get_event(key):
-        req = requests.get("{}/event/{}".format(api_link, key)).json()
+        req = requests.get("{}/event/{}".format(api_link, key), headers=headers).json()
 
         teams = []
-        req_teams = requests.get("{}/event/{}/teams".format(api_link, key)).json()
+        req_teams = requests.get("{}/event/{}/teams".format(api_link, key), headers=headers).json()
         for i in req_teams:
             teams.append(Team.get_team(i['team_number']))
 
         matches = []
-        req_matches = requests.get("{}/event/{}/matches".format(api_link, key)).json()
+        req_matches = requests.get("{}/event/{}/matches".format(api_link, key), headers=headers).json()
         for i in req_matches:
             matches.append(Match.get_match(i['key']))
 
         awards = []
-        req_awards = requests.get("{}/event/{}/awards".format(api_link, key)).json()
+        req_awards = requests.get("{}/event/{}/awards".format(api_link, key), headers=headers).json()
         for i in req_awards:
             recipients = []
             for j in i['recipient_list']:
@@ -133,10 +141,19 @@ class Event:
 
     @staticmethod
     def event_list(year):
-        req = requests.get("{}/events/{}".format(api_link, year)).json()
+        req = requests.get("{}/events/{}".format(api_link, year), headers=headers).json()
         events = []
         for i in req:
             events.append(i['key'])
+        return events
+
+    @staticmethod
+    def event_list_week(week, year):
+        req = requests.get("{}/events/{}".format(api_link, year), headers=headers).json()
+        events = []
+        for i in req:
+            if i['week'] == week:
+                events.append(i['key'])
         return events
 
     def get_key(self):
@@ -160,18 +177,30 @@ class Event:
     def get_teams(self):
         return self.teams
 
+    def get_team_ranking(self, team_number):
+        req = requests.get("{}/event/{}/rankings".format(api_link, self.key), headers=headers).json()
+        for i in req:
+            if i[1] == str(team_number):
+                return int(i[0])
+
+    def get_team_stat_number(self, team_number, index):
+        req = requests.get("{}/event/{}/rankings".format(api_link, self.key), headers=headers).json()
+        for i in req:
+            if i[1] == str(team_number):
+                return i[index]
+
     def get_opr(self, team_number):
-        req = requests.get("{}/event/{}/stats".format(api_link, self.key)).json()
+        req = requests.get("{}/event/{}/stats".format(api_link, self.key), headers=headers).json()
         if str(team_number) in req['opr']:
             return req['opr'][str(team_number)]
 
     def get_dpr(self, team_number):
-        req = requests.get("{}/event/{}/stats".format(api_link, self.key)).json()
+        req = requests.get("{}/event/{}/stats".format(api_link, self.key), headers=headers).json()
         if str(team_number) in req['dpr']:
             return req['dpr'][str(team_number)]
 
     def get_awards(self):
-        req = requests.get("{}/event/{}/awards".format(api_link, self.key)).json()
+        req = requests.get("{}/event/{}/awards".format(api_link, self.key), headers=headers).json()
         awards = []
         for i in req:
             recipients = []
@@ -194,11 +223,34 @@ class Match:
 
     @staticmethod
     def get_match(key):
-        req = requests.get("{}/api/v2/match/{}".format(api_link, key)).json()
+        req = requests.get("{}/match/{}".format(api_link, key), headers=headers).json()
         match = Match(req['key'], req['comp_level'], req['set_number'], req['match_number'],
                       req['alliances'], req['score_breakdown'], req['event_key'], req['videos'])
         return match
 
+    def get_key(self):
+        return self.key
+
+    def get_level(self):
+        return self.level
+
+    def get_set_number(self):
+        return self.set_number
+
+    def get_match_number(self):
+        return self.match_number
+
+    def get_alliances(self):
+        return self.alliances
+
+    def get_score_breakdown(self):
+        return self.score_breakdown
+
+    def get_event_key(self):
+        return self.event_key
+
+    def get_videos(self):
+        return self.videos
 
 class Award:
     def __init__(self, name, type, event_key, recipient_list, year):

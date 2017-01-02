@@ -16,8 +16,7 @@ def auth(creds_file):
     return gc
 
 
-def get_draft(creds_file, week):
-    gc = auth(creds_file)
+def get_draft(gc, week):
     title = "FF2017 Draft Week {}".format(week)
     try:
         sh = gc.open(title)
