@@ -55,10 +55,10 @@ class Team:
 
     def get_event_week(self, week, year):
         req = requests.get("{}/team/{}/{}/events".format(api_link, self.key, year), headers=headers).json()
-        events = []
         for i in req:
             if i['week'] == week:
                 return Event.get_event(i['key'])
+        return False
 
     def get_awards(self, event_key):
         req = requests.get("{}/team/{}/event/{}/awards".format(api_link, self.key, event_key), headers=headers).json()
@@ -66,7 +66,7 @@ class Team:
         for i in req:
             recipients = []
             for j in i['recipient_list']:
-                recipients.append(Team.get_team(j['team_number']))
+                recipients.append(j['team_number'])
             awards.append(Award(i['name'], i['award_type'], i['event_key'], recipients, i['year']))
         return awards
 
@@ -114,14 +114,14 @@ class Event:
         matches = []
         req_matches = requests.get("{}/event/{}/matches".format(api_link, key), headers=headers).json()
         for i in req_matches:
-            matches.append(Match.get_match(i['key']))
+            matches.append(i['key'])
 
         awards = []
         req_awards = requests.get("{}/event/{}/awards".format(api_link, key), headers=headers).json()
         for i in req_awards:
             recipients = []
             for j in i['recipient_list']:
-                recipients.append(Team.get_team(j['team_number']))
+                recipients.append(j['team_number'])
             award = Award(i['name'], i['award_type'], key, recipients, i['year'])
             awards.append(award)
 
@@ -205,7 +205,7 @@ class Event:
         for i in req:
             recipients = []
             for j in i['recipient_list']:
-                recipients.append(Team.get_team(j['team_number']))
+                recipients.append(j['team_number'])
             awards.append(Award(i['name'], i['award_type'], i['event_key'], recipients, i['year']))
         return awards
 

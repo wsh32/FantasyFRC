@@ -6,6 +6,8 @@ import draft
 
 """scoreboard.py: Automatically updates the scoreboard. Thanks TBA"""
 
+TITLE = "FF2017 TEST Scoreboard"
+
 def auth(creds_file):
     scope = [
         'https://spreadsheets.google.com/feeds',
@@ -17,7 +19,7 @@ def auth(creds_file):
 
 
 def get_scoreboard(gc):
-    title = "FF2017 Scoreboard"
+    title = TITLE
     try:
         sh = gc.open(title)
     except gspread.exceptions.SpreadsheetNotFound:
@@ -28,7 +30,7 @@ def get_scoreboard(gc):
 
 def create_scoreboard(creds_file, admin_file, participants_file):
     gc = auth(creds_file)
-    title = "FF2017 Scoreboard"
+    title = TITLE
     sh = get_scoreboard(gc)
     if not sh:
         sh = gc.create(title)
@@ -57,28 +59,31 @@ def create_scoreboard(creds_file, admin_file, participants_file):
         wks.update_acell(cell, name)
 
 
-def score_week(creds_file, week, year):
+def score_week(creds_file, week, year, award_scoring):
     gc = auth(creds_file)
     wks = get_scoreboard(gc)
     dft = draft.get_draft(gc, week)
 
     col = wks.find('Week {}'.format(week)).col
 
-    names = wks.col_values(1)[1:]
-
+    names = [x for x in wks.col_values(1)[1:] if x != ""]
     for name in names:
         dftrow = dft.find(name).row
-        picks = dft.get_row(dftrow)[1:]
+        picks = [x for x in dft.row_values(dftrow)[1:] if x != ""]
         score = 0
         for pick in picks:
-            score += score_team(pick)
+            score += score_team(pick, week, year, award_scoring)
 
         wks.update_cell(wks.find(name).row, col, score)
 
 
 def score_team(number, week, year, award_scoring):
+    print(number)
     team = Team.get_team(number)
     event = team.get_event_week(week, year)
+    if not event:
+        print(event)
+        return 0
     event_key = event.get_key()
     awards = team.get_awards(event_key)
 
@@ -95,7 +100,7 @@ def score_team(number, week, year, award_scoring):
                 break
             score += 2
 
-    matches = team.get_matches()
+    matches = team.get_matches(event_key)
     highest_level = 0
     for match in matches:
         if match.get_level() == 'qf':
@@ -123,5 +128,5 @@ def score_team(number, week, year, award_scoring):
         score += 3
     elif ranking <= 16:
         score += 2
-
+    print(score)
     return score

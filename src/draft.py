@@ -5,6 +5,7 @@ import gspread
 
 """draft.py: Creates draft spreadsheets on Google Sheets and grabs data"""
 
+TITLE_TEMPLATE = "FF2017 TEST Draft Week {}"
 
 def auth(creds_file):
     scope = [
@@ -17,7 +18,7 @@ def auth(creds_file):
 
 
 def get_draft(gc, week):
-    title = "FF2017 Draft Week {}".format(week)
+    title = TITLE_TEMPLATE.format(week)
     try:
         sh = gc.open(title)
     except gspread.exceptions.SpreadsheetNotFound:
@@ -27,7 +28,7 @@ def get_draft(gc, week):
 
 def create_draft(creds_file, week, admin_file, participants_file):
     gc = auth(creds_file)
-    title = "FF2017 Draft Week {}".format(week)
+    title = TITLE_TEMPLATE.format(week)
     try:
         sh = gc.open(title)
     except gspread.exceptions.SpreadsheetNotFound:
