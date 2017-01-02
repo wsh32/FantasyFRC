@@ -2,10 +2,11 @@ import csv
 import random
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
+import settings
 
 """draft.py: Creates draft spreadsheets on Google Sheets and grabs data"""
 
-TITLE_TEMPLATE = "FF2017 TEST Draft Week {}"
+TITLE_TEMPLATE = settings.DRAFT_TEMPLATE
 
 def auth(creds_file):
     scope = [

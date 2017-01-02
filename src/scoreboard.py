@@ -3,10 +3,11 @@ from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 from tba import *
 import draft
+import settings
 
 """scoreboard.py: Automatically updates the scoreboard. Thanks TBA"""
 
-TITLE = "FF2017 TEST Scoreboard"
+TITLE = settings.SCOREBOARD_TITLE
 
 def auth(creds_file):
     scope = [
