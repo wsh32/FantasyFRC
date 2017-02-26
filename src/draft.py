@@ -8,6 +8,7 @@ import settings
 
 TITLE_TEMPLATE = settings.DRAFT_TEMPLATE
 
+
 def auth(creds_file):
     scope = [
         'https://spreadsheets.google.com/feeds',

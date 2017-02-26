@@ -4,6 +4,7 @@ import gspread
 from tba import *
 import draft
 import settings
+import threading
 
 """scoreboard.py: Automatically updates the scoreboard. Thanks TBA"""
 
@@ -68,14 +69,21 @@ def score_week(creds_file, week, year, award_scoring):
     col = wks.find('Week {}'.format(week)).col
 
     names = [x for x in wks.col_values(1)[1:] if x != ""]
+    threads = []
     for name in names:
-        dftrow = dft.find(name).row
-        picks = [x for x in dft.row_values(dftrow)[1:] if x != ""]
-        score = 0
-        for pick in picks:
-            score += score_team(pick, week, year, award_scoring)
+        t = threading.Thread(target=score_player, args=(dft, wks, col, name, week, year, award_scoring,))
+        threads.append(t)
+        t.start()
 
-        wks.update_cell(wks.find(name).row, col, score)
+
+def score_player(dft, wks, col, name, week, year, award_scoring):
+    dftrow = dft.find(name).row
+    picks = [x for x in dft.row_values(dftrow)[1:] if x != ""]
+    score = 0
+    for pick in picks:
+        score += score_team(pick, week, year, award_scoring)
+
+    wks.update_cell(wks.find(name).row, col, score)
 
 
 def score_team(number, week, year, award_scoring):

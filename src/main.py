@@ -5,6 +5,7 @@ from tba import *
 
 
 def setup():
+    print("Fantasy Setup")
     for i in range(7):
         draft.create_draft(settings.GOOGLE_SERVICE_SECRET_FILE, i+1, settings.ADMINS, settings.PARTICIPANTS)
     scoreboard.create_scoreboard(settings.GOOGLE_SERVICE_SECRET_FILE, settings.ADMINS, settings.PARTICIPANTS)
