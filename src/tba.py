@@ -56,7 +56,7 @@ class Team:
     def get_event_week(self, week, year):
         req = requests.get("{}/team/{}/{}/events".format(api_link, self.key, year), headers=headers).json()
         for i in req:
-            if i['week'] == week:
+            if i['week'] == week - 1:
                 return Event.get_event(i['key'])
         return False
 
@@ -180,7 +180,7 @@ class Event:
     def get_team_ranking(self, team_number):
         req = requests.get("{}/event/{}/rankings".format(api_link, self.key), headers=headers).json()
         for i in req:
-            if i[1] == str(team_number):
+            if i[1] == int(team_number):
                 return int(i[0])
 
     def get_team_stat_number(self, team_number, index):

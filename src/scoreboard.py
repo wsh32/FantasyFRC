@@ -1,4 +1,3 @@
-import csv
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 from tba import *
@@ -81,33 +80,47 @@ def score_player(dft, wks, col, name, week, year, award_scoring):
     picks = [x for x in dft.row_values(dftrow)[1:] if x != ""]
     score = 0
     for pick in picks:
-        score += score_team(pick, week, year, award_scoring)
+        score += score_team(pick, week, year, award_scoring, name, False)
 
     wks.update_cell(wks.find(name).row, col, score)
 
 
-def score_team(number, week, year, award_scoring):
-    print(number)
+def score_team(number, week, year, award_scoring, player, debug):
     team = Team.get_team(number)
+    if debug:
+        print("Number", number)
     event = team.get_event_week(week, year)
-    if not event:
-        print(event)
+    if not event or event is None:
+        if debug:
+            print("TEAM MISSING EVENT: ", number)
         return 0
     event_key = event.get_key()
+    if debug:
+        print(event_key)
     awards = team.get_awards(event_key)
 
-    csvfile = open(award_scoring, 'r')
-    reader = csv.DictReader(csvfile, delimiter="\t")
+    csvfile = open(award_scoring, 'r').read()
+
+    csv = []
+
+    for i in csvfile.split("\n")[1:]:
+        csv.append(i.split("\t"))
 
     score = 0
 
     for award in awards:
         type = award.get_type()
-        for i in reader:
-            if type == i['tba id number']:
-                score += i['points']
+        for i in csv:
+            print(i[1])
+            if str(type) == str(i[1]):
+                if debug:
+                    print(i[0], int(i[2]))
+                score += int(i[2])
                 break
             score += 2
+
+            if debug:
+                print("score", score)
 
     matches = team.get_matches(event_key)
     highest_level = 0
@@ -122,12 +135,25 @@ def score_team(number, week, year, award_scoring):
             highest_level = 2
 
     if highest_level == 2:
+        if debug:
+            print('semi')
         score += 10
     elif highest_level == 1:
+        if debug:
+            print('quarter')
         score += 4
 
+    ranking_score = event.get_team_stat_number(number, 2)
+    if debug:
+        print("ranking score", ranking_score)
+    score += int(ranking_score)
+
     ranking = event.get_team_ranking(number)
-    if ranking == 1:
+    if debug:
+        print("team:ranking",number,ranking)
+    if ranking is None and debug:
+        print("Missing", number)
+    elif ranking == 1:
         score += 20
     elif ranking <= 3:
         score += 12
@@ -137,5 +163,9 @@ def score_team(number, week, year, award_scoring):
         score += 3
     elif ranking <= 16:
         score += 2
-    print(score)
+    if debug:
+        print(ranking)
+        print(score)
+
+    print(player, number, score, sep='\t')
     return score
